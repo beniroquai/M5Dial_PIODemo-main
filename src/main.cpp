@@ -34,7 +34,8 @@ const unsigned long LONG_PRESS_DURATION = 150; // 1 second for long press
 void setup()
 {
     USBSerial.begin(115200);
-    Wire.begin(I2C_SLAVE_ADDR, 15, 13, 100000); // Start I2C communication as slave
+    Wire.begin(I2C_SLAVE_ADDR, 15, 13, 50000); // Start I2C communication as slave
+
     Wire.onRequest(requestEvent); // Register event to send data when requested by the master
     auto cfg = M5.config();
     M5Dial.begin(cfg, true, false);
@@ -55,8 +56,8 @@ void requestEvent()
     data.pos_y = positions[1];
     data.pos_z = positions[2];
     data.pos_a = positions[3];
-    
-    Wire.write((uint8_t*)&data, sizeof(data));
+
+    Wire.write((uint8_t*)&data, sizeof(DialData));
     USBSerial.printf("Sent positions: %d, %d, %d, %d\n", positions[0], positions[1], positions[2], positions[3]);
 }
 

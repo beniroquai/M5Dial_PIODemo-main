@@ -19,7 +19,8 @@ DialData dialData;
 void setup()
 {
     Serial.begin(115200);
-    Wire.begin(I2C_SDA, I2C_SCL); //, 100000);
+    Wire.begin(I2C_SDA, I2C_SCL); //, 100000)
+    Wire.setClock(50000);
 }
 
 void loop()
