@@ -43,7 +43,7 @@ void setup()
     M5Dial.Display.setTextSize(1);
     M5Dial.Display.drawString("X=" + String(positions[currentAxis]), M5Dial.Display.width() / 2,
                               M5Dial.Display.height() / 2);
-    Wire.begin(I2C_SLAVE_ADDR, 13, 15, 100000); // Start I2C communication as slave
+    Wire.begin(I2C_SLAVE_ADDR, 13, 15, 400000); // Start I2C communication as slave
     Wire.onRequest(requestEvent); // Register event to send data when requested by the master
 
 }
