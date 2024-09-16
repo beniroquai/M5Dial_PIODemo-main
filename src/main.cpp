@@ -34,9 +34,6 @@ const unsigned long LONG_PRESS_DURATION = 150; // 1 second for long press
 void setup()
 {
     USBSerial.begin(115200);
-    Wire.begin(I2C_SLAVE_ADDR, 15, 13, 50000); // Start I2C communication as slave
-
-    Wire.onRequest(requestEvent); // Register event to send data when requested by the master
     auto cfg = M5.config();
     M5Dial.begin(cfg, true, false);
 
@@ -46,6 +43,9 @@ void setup()
     M5Dial.Display.setTextSize(1);
     M5Dial.Display.drawString("X=" + String(positions[currentAxis]), M5Dial.Display.width() / 2,
                               M5Dial.Display.height() / 2);
+    Wire.begin(I2C_SLAVE_ADDR, 13, 15, 100000); // Start I2C communication as slave
+    Wire.onRequest(requestEvent); // Register event to send data when requested by the master
+
 }
 
 void requestEvent()

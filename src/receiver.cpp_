@@ -2,40 +2,105 @@
 
 #define I2C_SLAVE_ADDR 0x60
 
-     // I2c
-     int8_t I2C_SCL = GPIO_NUM_22;      // This is the poart that connects to all other slaves
-     int8_t I2C_SDA = GPIO_NUM_21;
+// I2c
+int8_t I2C_SCL = GPIO_NUM_22;      // This is the poart that connects to all other slaves
+int8_t I2C_SDA = GPIO_NUM_21;
 
 typedef struct __attribute__((packed))
 {
-    int32_t pos_x;
-    int32_t pos_y;
-    int32_t pos_z;
-    int32_t pos_a;
+  int32_t pos_x;
+  int32_t pos_y;
+  int32_t pos_z;
+  int32_t pos_a;
 } DialData;
 
 DialData dialData;
 
+void i2c_scan()
+{
+  // Ensure we start with no stored addresses
+  int numDevices = 0;
+  int MAX_I2C_DEVICES = 20;
+  byte i2cAddresses[MAX_I2C_DEVICES]; 
+  byte error, address;
+
+  Serial.println("Scanning...");
+
+  for (address = 1; address < 127; address++)
+  {
+    // Begin I2C transmission to check if a device acknowledges at this address
+    Wire.beginTransmission(address);
+    error = Wire.endTransmission();
+
+    if (error == 0)
+    {
+      Serial.printf("I2C device found at address 0x%02X  !", address);
+      // Store the address if the device is found and space is available in the array
+      if (numDevices < MAX_I2C_DEVICES)
+      {
+        i2cAddresses[numDevices] = address;
+        numDevices++;
+      }
+      else
+      {
+        Serial.printf("Maximum number of I2C devices reached. Increase MAX_I2C_DEVICES if needed.");
+        break; // Exit the loop if we've reached the maximum storage capacity
+      }
+    }
+    else if (error == 4)
+    {
+      Serial.printf("Unknown device found at address 0x%02X  !", address);
+    }
+  }
+
+  if (numDevices == 0)
+    log_i("No I2C devices found\n");
+  else
+  {
+    Serial.printf("Found %d I2C devices.", numDevices);
+    Serial.printf("Addresses of detected devices:");
+    for (int i = 0; i < numDevices; i++)
+    {
+      if (i2cAddresses[i] < 16)
+      {
+        Serial.printf("0x0%X", i2cAddresses[i]);
+      }
+      else
+      {
+        Serial.printf("0x%X", i2cAddresses[i]);
+      }
+    }
+  }
+}
+
+
 void setup()
 {
-    Serial.begin(115200);
-    Wire.begin(I2C_SDA, I2C_SCL); //, 100000)
-    Wire.setClock(50000);
+  Serial.begin(115200);
+  Wire.begin(I2C_SDA, I2C_SCL); //, 100000)
+  Serial.println("Start");
+  i2c_scan();
 }
 
 void loop()
 {
-    // Request data from the slave
-    Wire.requestFrom(I2C_SLAVE_ADDR, sizeof(DialData));
+  // Request data from the slave
+  Wire.requestFrom(I2C_SLAVE_ADDR, sizeof(DialData));
+  delay(5);
+  // Read the received data into dialData struct
+  if (Wire.available() == sizeof(DialData))
+  {
+    Wire.readBytes((char*)&dialData, sizeof(DialData));
 
-    // Read the received data into dialData struct
-    if (Wire.available() == sizeof(DialData))
-    {
-        Wire.readBytes((char*)&dialData, sizeof(DialData));
+    // Print the received data
+    Serial.printf("X=%d, Y=%d, Z=%d, A=%d\n", dialData.pos_x, dialData.pos_y, dialData.pos_z, dialData.pos_a);
+  }
+  else{
+    Wire.readBytes((char*)&dialData, sizeof(DialData));
 
-        // Print the received data
-        Serial.printf("X=%d, Y=%d, Z=%d, A=%d\n", dialData.pos_x, dialData.pos_y, dialData.pos_z, dialData.pos_a);
-    }
+    // Print the received data
+    Serial.printf("Error: X=%d, Y=%d, Z=%d, A=%d\n", dialData.pos_x, dialData.pos_y, dialData.pos_z, dialData.pos_a);
+  }
 
-    delay(500); // Polling delay
+  delay(500); // Polling delay
 }
